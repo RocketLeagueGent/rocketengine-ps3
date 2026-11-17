@@ -1,0 +1,34 @@
+name: Build PS3 pkg
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+
+      # Cache the whole PS3 toolchain (ps3toolchain + PSL1GHT) — first run builds
+      # it (~40-60 min), later runs restore it in seconds.
+      - name: Cache PS3 toolchain
+        uses: actions/cache@v4
+        with:
+          path: /usr/local/ps3dev
+          key: ps3dev-toolchain-v1
+
+      - name: Install toolchain (skips finished steps)
+        run: ./setup.sh
+
+      - name: Build pkg
+        run: ./build.sh
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RocketEngine_pkg
+          path: RocketEngine_v0.1.pkg
+          if-no-files-found: error
